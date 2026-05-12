@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finance Ledger Pro</title>
+
+    <style>
+        :root {
+            --bg: #f3f4f6;
+            --card: #ffffff;
+            --border: #d1d5db;
+            --text: #111827;
+            --muted: #6b7280;
+            --primary: #111827;
+            --success: #16a34a;
+            --danger: #dc2626;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        button {
+            cursor: pointer;
+            border: none;
+            border-radius: 6px;
+            padding: 10px 14px;
+            font-weight: bold;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            margin-top: 5px;
+            margin-bottom: 15px;
+        }
+
+        h2,
+        h3 {
+            margin-bottom: 15px;
+        }
+
+        #loginScreen {
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .login-box {
+            width: 340px;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .login-box button {
+            width: 100%;
+            background: black;
+            color: white;
+        }
+
+        #app {
+            display: flex;
+            height: 100vh;
+        }
+
+        .sidebar {
+            width: 240px;
+            background: white;
+            border-right: 1px solid var(--border);
+            padding: 20px;
+            overflow: auto;
+        }
+
+        .sidebar h2 {
+            margin-bottom: 30px;
+        }
+
+        .sidebar button {
+            width: 100%;
+            margin-bottom: 10px;
+            background: #f3f4f6;
+            color: black;
+            text-align: left;
+        }
+
+        .sidebar button.active {
+            background: black;
+            color: white;
+        }
+
+        .content {
+            flex: 1;
+            padding: 20px;
+            overflow: auto;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 360px;
+            gap: 20px;
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+        }
+
+        .cash-row {
+            display: grid;
+            grid-template-columns: 80px 1fr 80px;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .cash-total {
+            margin-top: 10px;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 10px;
+        }
+
+        .receipt {
+            font-family: monospace;
+            border: 1px dashed #999;
+            padding: 20px;
+            background: white;
+        }
+
+        .receipt h3 {
+            text-align: center;
+            margin-bottom: 5px;
+        }
+
+        .receipt p {
+            text-align: center;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+
+        .receipt-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            font-size: 14px;
+        }
+
+        .divider {
+            border-top: 1px dashed #aaa;
+            margin: 10px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        th {
+            background: #f9fafb;
+        }
+
+        .staff-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: #f9fafb;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+
+        .staff-row button {
+            background: red;
+            color: white;
+            padding: 6px 10px;
+        }
+
+        .save-btn {
+            width: 100%;
+            background: black;
+            color: white;
+            margin-top: 15px;
+        }
+
+        .print-btn {
+            width: 100%;
+            margin-top: 15px;
+            background: #f3f4f6;
+            color: black;
+            border: 1px solid #ccc;
+        }
+
+        .logout-btn {
+            background: red !important;
+            color: white !important;
+        }
+
+        @media(max-width:900px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                width: 200px;
+            }
+        }
+
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+
+            #receipt,
+            #receipt * {
+                visibility: visible;
+            }
+
+            #receipt {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 80mm;
+                background: white;
+                padding: 10px;
+            }
+
+            button {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="loginScreen">
+        <div class="login-box">
+            <h2>Finance Ledger Login</h2>
+            <label>Username</label>
+            <input type="text" id="loginUser">
+            <label>Password</label>
+            <input type="password" id="loginPass">
+            <button onclick="login()">Login</button>
+        </div>
+    </div>
+
+    <div id="app" class="hidden">
+
+        <div class="sidebar">
+            <h2>Finance Ledger</h2>
+            <button class="tabBtn active" onclick="showTab('newTxn',this)">New Transaction</button>
+            <button class="tabBtn" onclick="showTab('ledger',this)">Ledger</button>
+            <button class="tabBtn" onclick="openSettings(this)">Settings</button>
+            <hr style="margin:20px 0;">
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+
+        <div class="content">
+
+            <div id="newTxn">
+                <div class="grid">
+
+                    <div class="card">
+                        <h2>New Transaction</h2>
+                        <div class="row">
+                            <div>
+                                <label>Transaction Type</label>
+                                <select id="type">
+                                    <option>Deposit</option>
+                                    <option>Withdrawal</option>
+                                    <option>Transfer</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label>Payment Mode</label>
+                                <select id="mode">
+                                    <option>Cash</option>
+                                    <option>Digital</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div>
+                                <label>Customer Name</label>
+                                <input type="text" id="name">
+                            </div>
+                            <div>
+                                <label>Account No / Reference</label>
+                                <input type="text" id="account">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div>
+                                <label>Total Amount</label>
+                                <input type="number" id="amount">
+                            </div>
+                            <div>
+                                <label>Phone Number</label>
+                                <input type="text" id="phone">
+                            </div>
+                        </div>
+
+                        <div id="cashWrapper">
+                            <h3>Cash Denominations</h3>
+                            <div id="cashSection"></div>
+                            <div class="cash-total" id="cashTotal">Calculated Cash: ₹0</div>
+                            <div id="cashError" class="error hidden"></div>
+                        </div>
+
+                        <div style="margin-top:20px;">
+                            <label>Status</label>
+                            <select id="status">
+                                <option>Successful</option>
+                                <option>Pending</option>
+                            </select>
+                        </div>
+
+                        <button id="saveBtn" class="save-btn" onclick="saveTransaction()">
+                            Save Transaction
+                        </button>
+                    </div>
+
+                    <div class="card">
+                        <div class="receipt" id="receipt">
+                            <h3>घनश्याम बुक डिपो एवं ई-मित्र</h3>
+                            <p>मुख्य बस स्टैंड, बिलाड़ा, जोधपुर - 342602</p>
+                            <div class="divider"></div>
+
+                            <div class="receipt-row">
+                                <span>Date</span>
+                                <span id="rDate"></span>
+                            </div>
+                            <div class="receipt-row">
+                                <span>Txn ID</span>
+                                <span id="rTxn"></span>
+                            </div>
+                            <div class="receipt-row">
+                                <span>Name</span>
+                                <span id="rName"></span>
+                            </div>
+                            <div class="receipt-row">
+                                <span>Account</span>
+                                <span id="rAccount"></span>
+                            </div>
+                            <div class="receipt-row">
+                                <span>Type</span>
+                                <span id="rType"></span>
+                            </div>
+                            <div class="receipt-row">
+                                <span>Mode</span>
+                                <span id="rMode"></span>
+                            </div>
+
+                            <div class="divider"></div>
+
+                            <div class="receipt-row">
+                                <b>Total</b>
+                                <b id="rAmount">₹0</b>
+                            </div>
+
+                            <div class="divider"></div>
+
+                            <p>This receipt is valid only for next four days from date of generation.</p>
+                            <p>यह रसीद जारी होने की तारीख से अगले चार दिनों के लिए ही मान्य है।</p>
+                        </div>
+
+                        <button class="print-btn" onclick="window.print()">Print Receipt</button>
+                    </div>
+
+                </div>
+            </div>
+
+            <div id="ledger" class="hidden">
+                <div class="card">
+                    <h2>Ledger</h2>
+                    <div style="overflow:auto;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Txn ID</th>
+                                    <th>Staff</th>
+                                    <th>Name</th>
+                                    <th>Type</th>
+                                    <th>Mode</th>
+                                    <th>Status</th>
+                                    <th>Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ledgerBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="settings" class="hidden">
+                <div class="card">
+                    <h2>Settings</h2>
+
+                    <label>Starting Transaction ID</label>
+                    <input type="number" id="settingTxnId">
+
+                    <label>Workspace ID</label>
+                    <input type="text" id="workspaceId">
+
+                    <label>Google Apps Script URL</label>
+                    <input type="text" id="scriptUrl">
+
+                    <label>Print Receipt Language</label>
+                    <select id="settingLanguage">
+                        <option value="hi">Hindi</option>
+                        <option value="en">English</option>
+                    </select>
+
+                    <button class="save-btn" onclick="saveSettings()">
+                        Save Settings
+                    </button>
+
+                    <hr style="margin:25px 0;">
+
+                    <h3>Staff Management</h3>
+                    <div id="staffList"></div>
+
+                    <div class="row">
+                        <div><input type="text" id="newStaffUser" placeholder="Username"></div>
+                        <div><input type="password" id="newStaffPass" placeholder="Password"></div>
+                    </div>
+
+                    <button onclick="addStaff()">Add Staff</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+
+        const MANAGEMENT_PASSWORD = "pawapatel@123";
+        const denominations = [500, 200, 100, 50, 20, 10];
+
+        const state = {
+            settings: null,
+            currentStaff: null,
+            cash: {},
+            ledger: []
+        };
+
+        function initSettings() {
+            const saved = localStorage.getItem("ledgerSettings");
+            if (saved) {
+                state.settings = JSON.parse(saved);
+                if (!state.settings.language) state.settings.language = "hi";
+            } else {
+                state.settings = {
+                    nextTxnId: 1001,
+                    workspaceId: "WS-001",
+                    scriptUrl: "",
+                    language: "hi",
+                    staffs: [
+                        { username: "admin", password: "1234" }
+                    ]
+                };
+                localStorage.setItem("ledgerSettings", JSON.stringify(state.settings));
+            }
+        }
+
+        initSettings();
+
+        function login() {
+            const u = document.getElementById("loginUser").value.trim();
+            const p = document.getElementById("loginPass").value.trim();
+
+            const user = state.settings.staffs.find(
+                s => s.username === u && s.password === p
+            );
+
+            if (user) {
+                state.currentStaff = user.username;
+                document.getElementById("loginScreen").classList.add("hidden");
+                document.getElementById("app").classList.remove("hidden");
+
+                updateReceipt();
+                loadLedgerFromGoogleSheet();
+            } else {
+                alert("Invalid Username or Password");
+            }
+        }
+
+        function logout() {
+            location.reload();
+        }
+
+        function setActiveButton(btn) {
+            document.querySelectorAll(".tabBtn").forEach(b => b.classList.remove("active"));
+            if (btn) btn.classList.add("active");
+        }
+
+        function showTab(id, btn) {
+            setActiveButton(btn);
+            document.getElementById("newTxn").classList.add("hidden");
+            document.getElementById("ledger").classList.add("hidden");
+            document.getElementById("settings").classList.add("hidden");
+            document.getElementById(id).classList.remove("hidden");
+        }
+
+        function openSettings(btn) {
+            const pass = prompt("Enter Management Password");
+            if (pass !== MANAGEMENT_PASSWORD) {
+                alert("Wrong Password");
+                return;
+            }
+
+            setActiveButton(btn);
+            showTab("settings");
+
+            document.getElementById("settingTxnId").value = state.settings.nextTxnId;
+            document.getElementById("workspaceId").value = state.settings.workspaceId;
+            document.getElementById("scriptUrl").value = state.settings.scriptUrl;
+            document.getElementById("settingLanguage").value = state.settings.language || "hi";
+
+            renderStaffs();
+        }
+
+        function saveSettings() {
+            state.settings.nextTxnId = parseInt(document.getElementById("settingTxnId").value) || 1001;
+            state.settings.workspaceId = document.getElementById("workspaceId").value;
+            state.settings.scriptUrl = document.getElementById("scriptUrl").value;
+            state.settings.language = document.getElementById("settingLanguage").value;
+
+            localStorage.setItem("ledgerSettings", JSON.stringify(state.settings));
+            updateReceipt();
+            alert("Settings Saved");
+        }
+
+        function renderStaffs() {
+            const container = document.getElementById("staffList");
+            container.innerHTML = "";
+
+            state.settings.staffs.forEach((s, index) => {
+                container.innerHTML += `
+            <div class="staff-row">
+                <div><b>${s.username}</b></div>
+                <button onclick="deleteStaff(${index})">Delete</button>
+            </div>
+        `;
+            });
+        }
+
+        function addStaff() {
+            const u = document.getElementById("newStaffUser").value.trim();
+            const p = document.getElementById("newStaffPass").value.trim();
+
+            if (!u || !p) {
+                alert("Enter username & password");
+                return;
+            }
+
+            const exists = state.settings.staffs.find(s => s.username === u);
+            if (exists) {
+                alert("Username already exists");
+                return;
+            }
+
+            state.settings.staffs.push({ username: u, password: p });
+            localStorage.setItem("ledgerSettings", JSON.stringify(state.settings));
+
+            document.getElementById("newStaffUser").value = "";
+            document.getElementById("newStaffPass").value = "";
+
+            renderStaffs();
+            alert("Staff Added");
+        }
+
+        function deleteStaff(index) {
+            if (state.settings.staffs.length === 1) {
+                alert("At least one staff required");
+                return;
+            }
+            if (!confirm("Delete this staff?")) return;
+
+            state.settings.staffs.splice(index, 1);
+            localStorage.setItem("ledgerSettings", JSON.stringify(state.settings));
+            renderStaffs();
+        }
+
+        function buildCashInputs() {
+            const container = document.getElementById("cashSection");
+            container.innerHTML = "";
+
+            denominations.forEach(d => {
+                state.cash[d] = 0;
+                container.innerHTML += `
+            <div class="cash-row">
+                <div>₹${d}</div>
+                <input type="number" min="0" value="0" data-note="${d}" class="cashInput">
+                <div id="sub${d}">₹0</div>
+            </div>
+        `;
+            });
+        }
+
+        buildCashInputs();
+
+        function calculateCash() {
+            let total = 0;
+            denominations.forEach(d => {
+                const input = document.querySelector(`[data-note="${d}"]`);
+                const qty = parseInt(input.value) || 0;
+                state.cash[d] = qty;
+
+                const subtotal = qty * d;
+                document.getElementById(`sub${d}`).innerText = `₹${subtotal}`;
+                total += subtotal;
+            });
+
+            document.getElementById("cashTotal").innerText = `Calculated Cash: ₹${total}`;
+            return total;
+        }
+
+        function validateCash() {
+            const mode = document.getElementById("mode").value;
+
+            if (mode !== "Cash") {
+                document.getElementById("cashWrapper").style.display = "none";
+                document.getElementById("cashError").classList.add("hidden");
+                document.getElementById("saveBtn").disabled = false;
+                return true;
+            } else {
+                document.getElementById("cashWrapper").style.display = "block";
+            }
+
+            const amount = parseInt(document.getElementById("amount").value) || 0;
+            const cashTotal = calculateCash();
+
+            if (amount !== cashTotal) {
+                document.getElementById("cashError").classList.remove("hidden");
+                document.getElementById("cashError").innerText = `Cash total ₹${cashTotal} does not match entered amount ₹${amount}`;
+                document.getElementById("saveBtn").disabled = true;
+                return false;
+            } else {
+                document.getElementById("cashError").classList.add("hidden");
+                document.getElementById("saveBtn").disabled = false;
+                return true;
+            }
+        }
+
+        function getTxnId() {
+            return "TXN-" + state.settings.nextTxnId;
+        }
+
+        function updateReceipt() {
+            const lang = state.settings.language;
+            const rawAccount = document.getElementById("account").value || "";
+
+            let maskedAccount = "--";
+            if (rawAccount.length > 4) {
+                maskedAccount = "x".repeat(rawAccount.length - 4) + rawAccount.slice(-4);
+            } else if (rawAccount.length > 0) {
+                maskedAccount = rawAccount;
+            }
+
+            const header = document.querySelector("#receipt h3");
+            const subheader = document.querySelector("#receipt p");
+
+            if (lang === "hi") {
+                header.innerText = "घनश्याम बुक डिपो एवं ई-मित्र";
+                subheader.innerText = "मुख्य बस स्टैंड, बिलाड़ा, जोधपुर - 342602";
+            } else {
+                header.innerText = "Ghanshyam Book Dipo and e-mitra";
+                subheader.innerText = "Main Bus Stand, Bilara, Jodhpur - 342602";
+            }
+
+            // Updated date formatting to DD/MM/YYYY using en-IN locale
+            document.getElementById("rDate").innerText = new Date().toLocaleString('en-IN').toUpperCase();
+            document.getElementById("rTxn").innerText = getTxnId();
+            document.getElementById("rName").innerText = document.getElementById("name").value || "--";
+            document.getElementById("rAccount").innerText = maskedAccount;
+            document.getElementById("rType").innerText = document.getElementById("type").value;
+            document.getElementById("rMode").innerText = document.getElementById("mode").value;
+            document.getElementById("rAmount").innerText = "₹" + (document.getElementById("amount").value || 0);
+
+            validateCash();
+        }
+
+        ["type", "mode", "name", "account", "amount", "status", "phone"].forEach(id => {
+            document.getElementById(id).addEventListener("input", updateReceipt);
+            document.getElementById(id).addEventListener("change", updateReceipt);
+        });
+
+        document.addEventListener("input", (e) => {
+            if (e.target.classList.contains("cashInput")) {
+                calculateCash();
+                validateCash();
+                updateReceipt();
+            }
+        });
+
+        async function saveTransaction() {
+            if (!validateCash()) {
+                alert("Cash denomination total does not match amount");
+                return;
+            }
+
+            const payload = {
+                action: "saveTransaction",
+                workspaceId: state.settings.workspaceId,
+                timestamp: new Date().toISOString(),
+                staff: state.currentStaff,
+                txnId: getTxnId(),
+                type: document.getElementById("type").value,
+                mode: document.getElementById("mode").value,
+                status: document.getElementById("status").value,
+                name: document.getElementById("name").value,
+                account: document.getElementById("account").value,
+                phone: document.getElementById("phone").value,
+                amount: document.getElementById("amount").value,
+                n500: state.cash[500] || 0,
+                n200: state.cash[200] || 0,
+                n100: state.cash[100] || 0,
+                n50: state.cash[50] || 0,
+                n20: state.cash[20] || 0,
+                n10: state.cash[10] || 0
+            };
+
+            try {
+                if (state.settings.scriptUrl) {
+                    await fetch(state.settings.scriptUrl, {
+                        method: "POST",
+                        mode: "no-cors",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(payload)
+                    });
+                }
+
+                state.ledger.unshift(payload);
+                renderLedger();
+                alert("Transaction Saved Successfully");
+
+                state.settings.nextTxnId++;
+                localStorage.setItem("ledgerSettings", JSON.stringify(state.settings));
+
+                resetForm();
+                updateReceipt();
+
+            } catch (err) {
+                console.log(err);
+                alert("Error Saving Transaction");
+            }
+        }
+
+        function resetForm() {
+            document.getElementById("name").value = "";
+            document.getElementById("account").value = "";
+            document.getElementById("amount").value = "";
+            document.getElementById("phone").value = "";
+            document.getElementById("status").value = "Successful";
+            document.getElementById("type").value = "Deposit";
+            document.getElementById("mode").value = "Cash";
+
+            buildCashInputs();
+            calculateCash();
+            validateCash();
+        }
+
+        function renderLedger() {
+            const tbody = document.getElementById("ledgerBody");
+            tbody.innerHTML = "";
+
+            state.ledger.forEach(t => {
+                tbody.innerHTML += `
+            <tr>
+                <td>${new Date(t.timestamp).toLocaleString('en-IN').toUpperCase()}</td>
+                <td>${t.txnId}</td>
+                <td>${t.staff}</td>
+                <td>${t.name}</td>
+                <td>${t.type}</td>
+                <td>${t.mode}</td>
+                <td>${t.status}</td>
+                <td>₹${t.amount}</td>
+            </tr>
+        `;
+            });
+        }
+
+        async function loadLedgerFromGoogleSheet() {
+            if (!state.settings.scriptUrl) return;
+
+            try {
+                const response = await fetch(state.settings.scriptUrl);
+                const data = await response.json();
+
+                state.ledger = Array.isArray(data) ? data.reverse() : [];
+                renderLedger();
+            } catch (error) {
+                console.error("Ledger load error:", error);
+            }
+        }
+
+
+
+        calculateCash();
+        validateCash();
+        updateReceipt();
+
+    </script>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import Firebase modules from CDN
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+        import {
+            getFirestore,
+            collection,
+            addDoc,
+            getDocs,
+            query,
+            orderBy
+        } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+        // Your Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAhqGDzKotZbdkYGwkzgnCUm68_sndaXVs",
+            authDomain: "gbdmledger-54dec.firebaseapp.com",
+            projectId: "gbdmledger-54dec",
+            storageBucket: "gbdmledger-54dec.firebasestorage.app",
+            messagingSenderId: "681910023014",
+            appId: "1:681910023014:web:c180a97d7cd0db9af34ea7"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+
+        // Initialize Firestore
+        const db = getFirestore(app);
+
+        // Make Firestore available globally
+        window.db = db;
+
+        // Make Firestore functions available globally
+        window.firebaseFns = {
+            collection,
+            addDoc,
+            getDocs,
+            query,
+            orderBy
+        };
+
+        console.log("Firebase initialized successfully.");
+    </script>
+
+</body>
+
+</html>
